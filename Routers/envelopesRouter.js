@@ -1,35 +1,59 @@
 const router = require('express').Router();
-const {isEnvelopeTrue}  = require('../helpers/envelopes.js')
+const {isEnvelopeTrue}  = require('../helpers/eH.js');
+const db = require('../db');
 
-router.get('/', (req, res, next) => {
-    const envelopes = getAllEnvelopes();
-    res.status(200).json(envelopes);
-})
-
-router.get('/:id', (req, res, next) => {
-    envelope = findEnvelopeById(req.id);
-    res.status(200).json(envelope);
-})
-
-router.post('/', (req, res, next) => {
-    const envelope = req.body;
-    const value = isEnvelopeTrue(envelope);
-    if(value){
-        addEnvelope(envelope)
-        res.status(201).send('envelope successfully created')
-    } else {
-        res.status(409).send('That envelope already exist')
+router.get('/', async(req, res, next) => {
+    try {
+        const response = await db.getAllEnvelopes();
+        res.status(200).json(response);
+        
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Server Error')
     }
 })
 
-router.put('/:id', (req, res, next) => {
-    updatedEnvelope = updateEnvelopeById(req.id);
-    res.status(200).json(updatedEnvelope);
+router.get('/:id', (req, res, next) => {
+
+    res.status(200).json(req.envelope);
 })
 
-router.delete('/:id', (req, res, next) => {
-    deletedEnvelope = deleteEnvelopeById(req.id);
-    res.status(200).json(deletedEnvelope);
+router.post('/', async(req, res, next) => {
+    try {
+        const envelope = req.body;
+        const value = isEnvelopeTrue(envelope);
+        await db.addEnvelope(envelope);
+        res.status(201).send('envelope successfully created');
+        
+    } catch (error) {
+        console.log(error)
+        res.status(400).send(error.message)
+        
+    }
+    
+})
+
+router.put('/:id', async(req, res, next) => {
+    try {
+        const body = req.body;
+        isEnvelopeTrue(body)
+        await db.updateEnvelopeById(req.envelope[0].id, body);
+        res.status(200).send('Envelope successfuly updated');
+        
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+})
+
+router.delete('/:id', async(req, res, next) => {
+    try {
+        await db.deleteEnvelopeById(req.envelope[0].id);
+        res.status(200).send('Envelope successfuly deletede');
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).send(error.message)
+    }
 })
 
 module.exports = router;
