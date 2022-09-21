@@ -3,9 +3,10 @@ const express = require('express');
 const morgan = require('morgan');
 const router = require('./Routers/envelopesRouter.js');
 const envelopesRouter = require('./Routers/envelopesRouter.js');
+const transactionsRouter = require('./Routers/transactionsRouter.js')
 const app = express();
 const pool = require('./db-config')
-const { findEnvelopeById } = require('./db');
+const { findEnvelopeById, findTransactionById } = require('./db');
 
 
 app.use(morgan('dev'));
@@ -28,6 +29,22 @@ envelopesRouter.param('id', async (req, res, next, id) => {
 })
 
 app.use('/envelopes', envelopesRouter)
+
+transactionsRouter.param('id', async (req, res, next, id) => {
+    try {
+        
+        id = Number(id);
+        const transaction = await findTransactionById(id);
+
+        req.transaction = transaction;
+        next();
+        
+    } catch (error) {
+        res.status(404).send(error.message);
+    }
+})
+
+app.use('/transactions', transactionsRouter)
 
 app.listen(PORT, () => {
     console.log(`server listening on port ${PORT}`);
